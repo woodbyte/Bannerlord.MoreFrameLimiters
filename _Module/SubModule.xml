@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Module xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/BUTR/Bannerlord.XmlSchemas/master/SubModule.xsd" >
+  <Id value="$modulename$" />
+  <Name value="More Frame Limiters" />
+  <Version value="v$version$" />
+  <DefaultModule value="false" />
+  <ModuleCategory value="Singleplayer"/>
+  <ModuleType value="Community" />
+  <DependedModules>
+    <DependedModule Id="Bannerlord.Harmony" DependentVersion="v2.2.2" />
+    <DependedModule Id="Bannerlord.ButterLib" DependentVersion="v2.6.2" />
+    <DependedModule Id="Bannerlord.UIExtenderEx" DependentVersion="v2.6.0" />
+    <DependedModule Id="Bannerlord.MBOptionScreen" DependentVersion="v5.5.5" />
+  </DependedModules>
+  <!-- Community Dependency Metadata -->
+  <!-- https://github.com/BUTR/Bannerlord.BUTRLoader#for-modders -->
+  <DependedModuleMetadatas>
+    <DependedModuleMetadata id="Bannerlord.Harmony" order="LoadBeforeThis" version="v2.2.2" />
+    <DependedModuleMetadata id="Bannerlord.ButterLib" order="LoadBeforeThis" version="v2.6.2" />
+    <DependedModuleMetadata id="Bannerlord.UIExtenderEx" order="LoadBeforeThis" version="v2.6.0" />
+    <DependedModuleMetadata id="Bannerlord.MBOptionScreen" order="LoadBeforeThis" version="v5.5.5" />
+    <DependedModuleMetadata id="Native" order="LoadBeforeThis" version="v1.0.0.*" />
+    <DependedModuleMetadata id="SandBoxCore" order="LoadBeforeThis" version="v1.0.0.*" />
+    <DependedModuleMetadata id="Sandbox" order="LoadBeforeThis" version="v1.0.0.*" />
+    <DependedModuleMetadata id="StoryMode" order="LoadBeforeThis" version="v1.0.0.*" />
+    <DependedModuleMetadata id="CustomBattle" order="LoadBeforeThis" version="v1.0.0.*" />
+  </DependedModuleMetadatas>
+  <!-- Community Dependency Metadata -->
+  <SubModules>
+    <SubModule>
+      <Name value="More Frame Limiters" />
+      <DLLName value="$modulename$.dll" />
+      <SubModuleClassType value="$modulename$.SubModule" />
+      <Tags />
+    </SubModule>
+  </SubModules>
+</Module>
