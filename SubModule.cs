@@ -7,71 +7,64 @@ namespace Bannerlord.MoreFrameLimiters
 {
     public class SubModule : MBSubModuleBase
     {
-        GameState? _activeGameState = null;
-        int? _newFrameLimiter = null;
+        GameState? _activeState = null;
 
-        void ConfigureFrameLimiter(GameState activeState)
+        int GetFrameLimiter(GameState activeState)
         {
-            if (Settings.Instance == null) return;
+            if (Settings.Instance == null) return 0;
+
+            int limiter = 0;
 
             if (activeState is InitialState)
-                _newFrameLimiter = Settings.Instance.DefaultFrameLimiter;
+                limiter = Settings.Instance.DefaultFrameLimiter;
             else if (activeState is MapState)
-                _newFrameLimiter = Settings.Instance.MapToggle ? Settings.Instance.MapFrameLimiter : Settings.Instance.DefaultFrameLimiter;
-            else if (activeState is MissionState missionState)
+                limiter = Settings.Instance.MapToggle ? Settings.Instance.MapFrameLimiter : Settings.Instance.DefaultFrameLimiter;
+            else if (activeState is MissionState missionState && missionState.CurrentMission != null)
             {
-                if (missionState.CurrentMission == null) return;
-
-                //"TournamentFight" "ArenaPracticeFight" "ArenaDuelMission"
-                //"SiegeMissionWithDeployment"
-                //"TownCenter"
-                //"Village"
-                //"Indoor"
-
                 if (missionState.MissionName.Contains("Tournament") || missionState.MissionName.Contains("Arena"))
-                    _newFrameLimiter = Settings.Instance.ArenaToggle ? Settings.Instance.ArenaLimiter : Settings.Instance.DefaultFrameLimiter;
+                    limiter = Settings.Instance.ArenaToggle ? Settings.Instance.ArenaLimiter : Settings.Instance.DefaultFrameLimiter;
                 else if (missionState.MissionName.Contains("Siege"))
-                    _newFrameLimiter = Settings.Instance.SiegeToggle ? Settings.Instance.SiegeLimiter : Settings.Instance.DefaultFrameLimiter;
+                    limiter = Settings.Instance.SiegeToggle ? Settings.Instance.SiegeLimiter : Settings.Instance.DefaultFrameLimiter;
                 else if (missionState.MissionName == "TownCenter" || missionState.MissionName == "Village")
-                    _newFrameLimiter = Settings.Instance.VisitToggle ? Settings.Instance.VisitLimiter : Settings.Instance.DefaultFrameLimiter;
+                    limiter = Settings.Instance.VisitToggle ? Settings.Instance.VisitLimiter : Settings.Instance.DefaultFrameLimiter;
                 else if (missionState.MissionName == "Indoor")
-                    _newFrameLimiter = Settings.Instance.IndoorToggle ? Settings.Instance.IndoorLimiter : Settings.Instance.DefaultFrameLimiter;
+                    limiter = Settings.Instance.IndoorToggle ? Settings.Instance.IndoorLimiter : Settings.Instance.DefaultFrameLimiter;
                 else
-                    _newFrameLimiter = Settings.Instance.DefaultFrameLimiter;
+                    limiter = Settings.Instance.DefaultFrameLimiter;
             }
+
+            return limiter;
+        }
+
+        void ApplyFrameLimiter()
+        {
+            if (_activeState == null) return;
+
+            int limiter = GetFrameLimiter(_activeState);
+            if (limiter == 0) return;
+
+            NativeOptions.SetConfig(NativeOptions.NativeOptionsType.FrameLimiter, limiter);
+            NativeOptions.ApplyConfigChanges(false);
+        }
+
+        protected override void OnSubModuleLoad()
+        {
+            NativeOptions.OnNativeOptionsApplied += ApplyFrameLimiter;
         }
 
         protected override void OnApplicationTick(float dt)
         {
-            if (_newFrameLimiter != null)
+            if (GameStateManager.Current != null)
             {
-                if (_newFrameLimiter.Value != NativeOptions.GetConfig(NativeOptions.NativeOptionsType.FrameLimiter))
-                    NativeOptions.SetConfig(NativeOptions.NativeOptionsType.FrameLimiter, _newFrameLimiter.Value);
+                var currentState = GameStateManager.Current.ActiveState;
 
-                _newFrameLimiter = null;
+                if (currentState != null && currentState != _activeState)
+                {
+                    _activeState = currentState;
+
+                    ApplyFrameLimiter();
+                }
             }
-
-            if (GameStateManager.Current == null) return;
-            if (GameStateManager.Current.ActiveState != _activeGameState)
-            {
-                _activeGameState = GameStateManager.Current.ActiveState;
-
-                ConfigureFrameLimiter(_activeGameState);
-            }
-        }
-
-        public override void OnInitialState()
-        {
-            if (Settings.Instance == null) return;
-
-            Settings.Instance.PropertyChanged += Instance_PropertyChanged;
-        }
-
-        private void Instance_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (_activeGameState == null) return;
-
-            ConfigureFrameLimiter(_activeGameState);
         }
     }
 }
