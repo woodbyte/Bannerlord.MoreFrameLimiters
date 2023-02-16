@@ -11,6 +11,7 @@ namespace Bannerlord.MoreFrameLimiters
     {
         static GameState? _activeState = null;
         static bool _gameWindowHasFocus = true;
+        static int _lastForegroundLimiter;
 
         internal static void SetGameWindowHasFocus(bool hasFocus)
         {
@@ -23,7 +24,7 @@ namespace Bannerlord.MoreFrameLimiters
         {
             if (Settings.Instance == null) return 0;
 
-            int limiter = 0;
+            int limiter = _lastForegroundLimiter;
 
             if (!_gameWindowHasFocus)
                 limiter = Settings.Instance.BackgroundFrameLimiter;
@@ -57,6 +58,9 @@ namespace Bannerlord.MoreFrameLimiters
 
             NativeOptions.SetConfig(NativeOptions.NativeOptionsType.FrameLimiter, limiter);
             NativeOptions.ApplyConfigChanges(false);
+
+            if (_gameWindowHasFocus)
+                _lastForegroundLimiter = limiter;
         }
 
         protected override void OnSubModuleLoad()
