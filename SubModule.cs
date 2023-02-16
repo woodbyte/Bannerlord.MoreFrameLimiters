@@ -1,21 +1,33 @@
-﻿using TaleWorlds.CampaignSystem.GameState;
+﻿using HarmonyLib;
+using TaleWorlds.CampaignSystem.GameState;
 using TaleWorlds.Core;
 using TaleWorlds.Engine.Options;
 using TaleWorlds.MountAndBlade;
+using TaleWorlds.ScreenSystem;
 
 namespace Bannerlord.MoreFrameLimiters
 {
     public class SubModule : MBSubModuleBase
     {
-        GameState? _activeState = null;
+        static GameState? _activeState = null;
+        static bool _gameWindowHasFocus = true;
 
-        int GetFrameLimiter(GameState activeState)
+        internal static void SetGameWindowHasFocus(bool hasFocus)
+        {
+            _gameWindowHasFocus = hasFocus;
+
+            ApplyFrameLimiter();
+        }
+
+        static int GetFrameLimiter(GameState activeState)
         {
             if (Settings.Instance == null) return 0;
 
             int limiter = 0;
 
-            if (activeState is InitialState)
+            if (!_gameWindowHasFocus)
+                limiter = Settings.Instance.BackgroundFrameLimiter;
+            else if (activeState is InitialState)
                 limiter = Settings.Instance.DefaultFrameLimiter;
             else if (activeState is MapState)
                 limiter = Settings.Instance.MapToggle ? Settings.Instance.MapFrameLimiter : Settings.Instance.DefaultFrameLimiter;
@@ -36,7 +48,7 @@ namespace Bannerlord.MoreFrameLimiters
             return limiter;
         }
 
-        void ApplyFrameLimiter()
+        static void ApplyFrameLimiter()
         {
             if (_activeState == null) return;
 
@@ -49,6 +61,9 @@ namespace Bannerlord.MoreFrameLimiters
 
         protected override void OnSubModuleLoad()
         {
+            var harmony = new Harmony("bannerlord.moreframelimiters");
+            harmony.PatchAll();
+
             NativeOptions.OnNativeOptionsApplied += ApplyFrameLimiter;
         }
 
@@ -64,6 +79,20 @@ namespace Bannerlord.MoreFrameLimiters
 
                     ApplyFrameLimiter();
                 }
+            }
+        }
+    }
+
+    [HarmonyPatch]
+    internal class Patches
+    {
+        [HarmonyPatch(typeof(ScreenManager))]
+        [HarmonyPatch(nameof(ScreenManager.OnGameWindowFocusChange))]
+        class Patch01
+        {
+            internal static void Postfix(bool focusGained)
+            {
+                SubModule.SetGameWindowHasFocus(focusGained);
             }
         }
     }
